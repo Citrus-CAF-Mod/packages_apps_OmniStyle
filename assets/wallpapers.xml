@@ -16,8 +16,8 @@
  -->
 
 <wallpapers>
-    <wallpaper image="wall01" creator="customworx" />
-    <wallpaper image="wall02" creator="customworx" />
-    <wallpaper image="wall03" creator="customworx" />
-    <wallpaper image="wall04" creator="customworx" />
+    <wallpaper image="wall01" creator="customworx" name="Wallpaper 001" />
+    <wallpaper image="wall02" creator="customworx" name="Wallpaper 002" />
+    <wallpaper image="wall03" creator="customworx" name="Wallpaper 003" />
+    <wallpaper image="wall04" creator="customworx" name="Wallpaper 004" />
 </wallpapers>

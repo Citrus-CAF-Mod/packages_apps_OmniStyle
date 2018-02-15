@@ -72,6 +72,8 @@ public class BrowseWallsFilterActivity extends Activity {
     private static final String WALLPAPER_LIST_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/thumbs/json_wallpapers";
     private static final String WALLPAPER_THUMB_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/thumbs/";
     private static final String WALLPAPER_FULL_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/";
+    private static final String EMPTY_CREATOR = "ZZZ";
+
     private static final boolean DEBUG = false;
     private List<RemoteWallpaperInfo> mWallpaperUrlList;
     private RecyclerView mWallpaperView;
@@ -79,7 +81,6 @@ public class BrowseWallsFilterActivity extends Activity {
     private Runnable mDoAfter;
     private TextView mNoNetworkMessage;
     private ProgressBar mProgressBar;
-    private String mWallpaperDisplayDefault;
     private String mFilterTag;
 
     private static final int HTTP_READ_TIMEOUT = 30000;
@@ -92,6 +93,7 @@ public class BrowseWallsFilterActivity extends Activity {
         public String mThumbUri;
         public String mCreator;
         public String mDisplayName;
+        public String mTag;
     }
 
     class ImageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -142,8 +144,9 @@ public class BrowseWallsFilterActivity extends Activity {
                 RemoteWallpaperInfo wi = mWallpaperUrlList.get(position);
                 Picasso.with(BrowseWallsFilterActivity.this).load(wi.mThumbUri).into(holder.mWallpaperImage);
 
-                holder.mWallpaperName.setText(TextUtils.isEmpty(wi.mDisplayName) ? mWallpaperDisplayDefault + " " + (position + 1) : wi.mDisplayName);
-                holder.mWallpaperCreator.setVisibility(TextUtils.isEmpty(wi.mCreator) ? View.GONE : View.VISIBLE);
+                holder.mWallpaperName.setVisibility(TextUtils.isEmpty(wi.mDisplayName) ? View.GONE : View.VISIBLE);
+                holder.mWallpaperName.setText(wi.mDisplayName);
+                holder.mWallpaperCreator.setVisibility(TextUtils.isEmpty(wi.mCreator) ||  wi.mCreator.equals(EMPTY_CREATOR)? View.GONE : View.VISIBLE);
                 holder.mWallpaperCreator.setText(wi.mCreator);
             } catch (Exception e) {
                 holder.mWallpaperImage.setImageDrawable(null);
@@ -166,7 +169,6 @@ public class BrowseWallsFilterActivity extends Activity {
             mFilterTag = intent.getStringExtra("filter");
         }
         setContentView(R.layout.content_wallpapers_filter);
-        mWallpaperDisplayDefault = getResources().getString(R.string.wallpaper_default_name);
         getActionBar().setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
 
         mWallpaperUrlList = new ArrayList<RemoteWallpaperInfo>();
@@ -352,8 +354,9 @@ public class BrowseWallsFilterActivity extends Activity {
                         wi.mImage = fileName;
                         wi.mThumbUri = WALLPAPER_THUMB_URI + fileName;
                         wi.mUri = WALLPAPER_FULL_URI + fileName.substring(0,fileName.indexOf('.')) + ".png";
-                        wi.mCreator = creator;
-                        wi.mDisplayName = displayName;
+                        wi.mCreator = TextUtils.isEmpty(creator) ? EMPTY_CREATOR : creator;
+                        wi.mDisplayName = TextUtils.isEmpty(displayName) ? "" : displayName;
+                        wi.mTag = TextUtils.isEmpty(tag) ? "" : tag;
                         urlList.add(wi);
                         if (DEBUG) Log.d(TAG, "add remote wallpaper = " + wi.mUri);
                     }
