@@ -34,11 +34,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.media.MediaScannerConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -100,7 +102,7 @@ public class BrowseWallsActivity extends Activity {
 
     private static final int HTTP_READ_TIMEOUT = 30000;
     private static final int HTTP_CONNECTION_TIMEOUT = 30000;
-    private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0;
+    private static final int PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 0;
 
     private class WallpaperInfo {
         public String mImage;
@@ -116,7 +118,7 @@ public class BrowseWallsActivity extends Activity {
         public String mDisplayName;
     }
 
-    class ImageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class ImageHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener  {
         public View rootView;
         public ImageView mWallpaperImage;
         public TextView mWallpaperName;
@@ -129,6 +131,7 @@ public class BrowseWallsActivity extends Activity {
             mWallpaperName = (TextView) itemView.findViewById(R.id.wallpaper_name);
             mWallpaperCreator = (TextView) itemView.findViewById(R.id.wallpaper_creator);
             rootView.setOnClickListener(this);
+            rootView.setOnLongClickListener(this);
         }
         @Override
         public void onClick(View view) {
@@ -148,6 +151,13 @@ public class BrowseWallsActivity extends Activity {
             } else {
                 doSetRemoteWallpaper(position);
             }
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            int position = getAdapterPosition();
+            downloadRemoteWallpaper(position);
+            return true;
         }
     }
 
@@ -567,6 +577,11 @@ public class BrowseWallsActivity extends Activity {
 
     private class FetchWallpaperTask extends AsyncTask<String, Void, Void> {
         private String mWallpaperFile;
+        private boolean mDownloadOnly;
+
+        public FetchWallpaperTask(boolean downloadOnly) {
+            mDownloadOnly = downloadOnly;
+        }
 
         @Override
         protected Void doInBackground(String... params) {
@@ -582,16 +597,22 @@ public class BrowseWallsActivity extends Activity {
         @Override
         protected void onPostExecute(Void feed) {
             mProgressBar.setVisibility(View.GONE);
-            doSetRemoteWallpaperPost(mWallpaperFile);
+            if (!mDownloadOnly) {
+                doSetRemoteWallpaperPost(mWallpaperFile);
+            } else {
+                MediaScannerConnection.scanFile(BrowseWallsActivity.this,
+                        new String[] { mWallpaperFile }, null, null);
+            }
         }
     }
 
     private void runWithStoragePermissions(Runnable doAfter) {
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             mDoAfter = doAfter;
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
+                    PERMISSIONS_REQUEST_EXTERNAL_STORAGE);
         } else {
             doAfter.run();
         }
@@ -600,7 +621,7 @@ public class BrowseWallsActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+            case PERMISSIONS_REQUEST_EXTERNAL_STORAGE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -623,7 +644,23 @@ public class BrowseWallsActivity extends Activity {
                 File localWallpaperFile = new File(getExternalCacheDir(), fileName);
                 mProgressBar.setVisibility(View.VISIBLE);
                 Toast.makeText(BrowseWallsActivity.this, R.string.download_wallpaper_notice, Toast.LENGTH_SHORT).show();
-                FetchWallpaperTask fetch = new FetchWallpaperTask();
+                FetchWallpaperTask fetch = new FetchWallpaperTask(false);
+                fetch.execute(ri.mUri, localWallpaperFile.getAbsolutePath());
+            }
+        });
+    }
+
+    private void downloadRemoteWallpaper(final int position) {
+        runWithStoragePermissions(new Runnable() {
+            @Override
+            public void run() {
+                // no need to save for later - just always overwrite
+                RemoteWallpaperInfo ri = mWallpaperUrlList.get(position);
+                String fileName = ri.mImage;
+                File localWallpaperFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), fileName);
+                mProgressBar.setVisibility(View.VISIBLE);
+                Toast.makeText(BrowseWallsActivity.this, R.string.download_wallpaper_notice, Toast.LENGTH_SHORT).show();
+                FetchWallpaperTask fetch = new FetchWallpaperTask(true);
                 fetch.execute(ri.mUri, localWallpaperFile.getAbsolutePath());
             }
         });
