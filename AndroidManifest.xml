@@ -25,10 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <uses-sdk
-        android:minSdkVersion="24"
-        android:targetSdkVersion="24" />
-
     <application
         android:allowBackup="false"
         android:label="OmniStyle"
@@ -67,8 +63,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
