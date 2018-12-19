@@ -69,9 +69,9 @@ public class BrowseWallsFilterActivity extends Activity {
     private static final String TAG = "BrowseWallsActivity";
     private static final String IMAGE_TYPE = "image/*";
     private static final int IMAGE_CROP_AND_SET = 1;
-    private static final String WALLPAPER_LIST_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/thumbs/json_wallpapers";
-    private static final String WALLPAPER_THUMB_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/thumbs/";
-    private static final String WALLPAPER_FULL_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/n7x/";
+    private static final String WALLPAPER_LIST_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/master/thumbs/json_wallpapers";
+    private static final String WALLPAPER_THUMB_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/master/thumbs/";
+    private static final String WALLPAPER_FULL_URI = "https://raw.githubusercontent.com/Citrus-CAF/wallpapers/master/";
     private static final String EMPTY_CREATOR = "ZZZ";
 
     private static final boolean DEBUG = false;
